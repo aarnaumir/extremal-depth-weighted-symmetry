@@ -1,27 +1,9 @@
 #!/usr/bin/env python3
-"""
-Construct extremal rooted binary trees for the depth-weighted symmetry index.
-
-Minimum:
-  For every positive non-increasing depth weight f, the unique minimiser
-  with n leaves is the caterpillar C_n.
-
-Maximum:
-  For f_q(d)=q^{-d}, q>2, the unique maximiser is independent of q and is
-  given recursively by:
-      M(1) = leaf,
-      M(n) = (M(n/2), M(n/2))              if n is even,
-      M(n) = (F_{k(n)}, M(n-p(n)))         if n>=3 is odd,
-  where p(n)=2^{k(n)} is the unique power of two satisfying
-      (n+1)/3 < p(n) <= 2(n+1)/3.
-
-Output is Newick with leaves labelled L1,...,Ln.
-"""
-
 from __future__ import annotations
+
 import argparse
 from pathlib import Path
-from typing import Union, Tuple
+from typing import Tuple, Union
 
 Tree = Union[None, Tuple["Tree", "Tree"]]
 
@@ -44,7 +26,6 @@ def fully_balanced(height: int) -> Tree:
 
 
 def preferred_power(n: int) -> int:
-    """p(n): unique power of two in ((n+1)/3, 2(n+1)/3], for odd n>=3."""
     if n < 3 or n % 2 == 0:
         raise ValueError("n must be odd and >= 3")
     floor_x = (2 * (n + 1)) // 3
@@ -55,7 +36,6 @@ def preferred_power(n: int) -> int:
 
 
 def maximiser_exponential(n: int) -> Tree:
-    """Unique maximiser for f_q(d)=q^{-d}, q>2."""
     if n < 1:
         raise ValueError("n must be >= 1")
     if n == 1:
@@ -76,7 +56,6 @@ def leaf_count(t: Tree) -> int:
 
 
 def canonical_shape(t: Tree) -> str:
-    """Canonical unordered rooted-tree shape, used to test isomorphism."""
     if t is None:
         return "L"
     a, b = t
@@ -97,7 +76,31 @@ def iq_value(t: Tree, q: float, depth: int = 0) -> float:
     return root + iq_value(a, q, depth + 1) + iq_value(b, q, depth + 1)
 
 
-def to_newick(t: Tree, prefix: str = "L") -> str:
+def to_bullet_notation(t: Tree) -> str:
+    """
+    Canonical parenthetic notation with the symbol • for every leaf.
+    Example: the 3-leaf caterpillar is (•,(•,•));
+    """
+    def rec(x: Tree) -> str:
+        if x is None:
+            return "•"
+
+        a, b = x
+        sa = rec(a)
+        sb = rec(b)
+
+        if sa > sb:
+            sa, sb = sb, sa
+
+        return f"({sa},{sb})"
+
+    return rec(t) + ";"
+
+
+def to_labelled_newick(t: Tree, prefix: str = "L") -> str:
+    """
+    Standard Newick with unique leaf labels, for software that requires them.
+    """
     counter = 0
 
     def rec(x: Tree) -> str:
@@ -112,18 +115,34 @@ def to_newick(t: Tree, prefix: str = "L") -> str:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        description="Construct extremal rooted binary tree shapes."
+    )
     parser.add_argument("n", type=int, help="Number of leaves")
-    parser.add_argument("--q", type=float, default=None,
-                        help="Optional q>2; if given, also prints I_q values")
-    parser.add_argument("--save-dir", type=Path, default=None,
-                        help="Optional folder for .newick files")
+    parser.add_argument(
+        "--q",
+        type=float,
+        default=None,
+        help="Optional q>2; if given, also print I_q values",
+    )
+    parser.add_argument(
+        "--label-leaves",
+        action="store_true",
+        help="Use L1,...,Ln instead of • for compatibility with standard Newick software.",
+    )
+    parser.add_argument(
+        "--save-dir",
+        type=Path,
+        default=None,
+        help="Optional directory for saved tree files",
+    )
+
     args = parser.parse_args()
 
     if args.n < 1:
         parser.error("n must be >= 1")
     if args.q is not None and args.q <= 2:
-        parser.error("The implemented maximiser theorem requires q>2")
+        parser.error("The implemented maximiser theorem requires q > 2")
 
     tmin = caterpillar(args.n)
     tmax = maximiser_exponential(args.n)
@@ -131,17 +150,27 @@ def main() -> None:
     assert leaf_count(tmin) == args.n
     assert leaf_count(tmax) == args.n
 
-    nw_min = to_newick(tmin)
-    nw_max = to_newick(tmax)
+    if args.label_leaves:
+        out_min = to_labelled_newick(tmin)
+        out_max = to_labelled_newick(tmax)
+        mode = "labelled Newick"
+        extension = "newick"
+    else:
+        out_min = to_bullet_notation(tmin)
+        out_max = to_bullet_notation(tmax)
+        mode = "unlabelled tree-shape notation (• = leaf)"
+        extension = "tree"
 
     print(f"n = {args.n}")
+    print(f"output = {mode}")
+
     print("\nMINIMISER")
     print("valid for every positive non-increasing f")
-    print(nw_min)
+    print(out_min)
 
     print("\nMAXIMISER")
     print("valid for f_q(d)=q^(-d), q>2")
-    print(nw_max)
+    print(out_max)
 
     if args.q is not None:
         print(f"\nq = {args.q:g}")
@@ -150,10 +179,10 @@ def main() -> None:
 
     if args.save_dir is not None:
         args.save_dir.mkdir(parents=True, exist_ok=True)
-        pmin = args.save_dir / f"minimiser_{args.n}.newick"
-        pmax = args.save_dir / f"maximiser_{args.n}.newick"
-        pmin.write_text(nw_min + "\n", encoding="utf-8")
-        pmax.write_text(nw_max + "\n", encoding="utf-8")
+        pmin = args.save_dir / f"minimiser_{args.n}.{extension}"
+        pmax = args.save_dir / f"maximiser_{args.n}.{extension}"
+        pmin.write_text(out_min + "\n", encoding="utf-8")
+        pmax.write_text(out_max + "\n", encoding="utf-8")
         print(f"\nSaved: {pmin}")
         print(f"Saved: {pmax}")
 

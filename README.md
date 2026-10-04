@@ -4,7 +4,7 @@ Python code for constructing extremal rooted binary tree shapes for the depth-we
 
 **Extremal Depth-Weighted Symmetry in Rooted Binary Trees**
 
-The program takes a prescribed number of leaves `n` and returns, in **Newick format**:
+The program takes a prescribed number of leaves `n` and returns:
 
 - the unique **minimising tree** for every positive non-increasing depth weight `f`;
 - the unique **maximising tree** for reciprocal exponential weights
@@ -13,7 +13,9 @@ The program takes a prescribed number of leaves `n` and returns, in **Newick for
 f_q(d) = q^(-d),   q > 2.
 ```
 
-For the reciprocal exponential family, the maximising **shape is independent of q** throughout the range `q > 2`.
+The mathematical objects studied in the paper are **finite rooted, unordered, unlabelled full binary tree shapes**. Accordingly, the default output represents every leaf by the symbol `•`, matching the notation used in the manuscript.
+
+For reciprocal exponential weights, the maximising **shape is independent of q** throughout the range `q > 2`.
 
 ---
 
@@ -49,7 +51,11 @@ f_q(d) = q^(-d),   q > 2,
 
 the unique maximiser is constructed recursively.
 
-If `n = 1`, the maximiser is a single leaf.
+If `n = 1`, the maximiser is a single leaf:
+
+```text
+•;
+```
 
 If `n` is even,
 
@@ -78,22 +84,64 @@ Equivalently, `p(n)` is the unique power of two satisfying
 
 ---
 
-## Features
+## Tree-shape notation
 
-- Constructs the extremal tree shapes directly from the theoretical characterisation.
-- Outputs both trees in standard Newick format.
-- Uses only the Python standard library.
-- Optionally evaluates `I_q` for a chosen `q > 2`.
-- Optionally saves the minimiser and maximiser as `.newick` files.
-- Uses integer arithmetic to determine the preferred power `p(n)`, avoiding floating-point ambiguity.
-- Includes internal checks for the number of leaves.
+By default, the program uses a parenthetic representation of the **unlabelled tree shape**, with `•` denoting a leaf.
+
+Examples:
+
+```text
+•;
+```
+
+is the one-leaf tree,
+
+```text
+(•,•);
+```
+
+is the unique rooted binary tree with two leaves, and
+
+```text
+((•,•),•);
+```
+
+represents the 3-leaf caterpillar.
+
+Because the trees are **unordered**, exchanging the two children of any internal vertex does not produce a different mathematical tree shape. The program therefore uses a canonical ordering of the child representations.
+
+This default notation is intended to mirror the notation used in the accompanying paper.
+
+### Optional labelled Newick output
+
+Some external phylogenetic programs require named tips. For compatibility with such software, the option
+
+```bash
+--label-leaves
+```
+
+produces standard Newick output with leaves labelled `L1`, `L2`, ..., `Ln`.
+
+For example:
+
+```bash
+python extremal_symmetry_trees.py 3 --label-leaves
+```
+
+produces a labelled representation of the form
+
+```text
+((L1,L2),L3);
+```
+
+The labels have no mathematical meaning; they are introduced only for software compatibility.
 
 ---
 
 ## Requirements
 
 - Python 3.9 or later
-- No external Python packages are required.
+- No external Python packages are required
 
 ---
 
@@ -119,13 +167,20 @@ To also evaluate the reciprocal exponential index for a particular `q > 2`:
 python extremal_symmetry_trees.py 14 --q 3
 ```
 
-To save the Newick trees to a directory:
+To save the two extremal trees:
 
 ```bash
 python extremal_symmetry_trees.py 14 --q 3 --save-dir trees
 ```
 
-This creates
+With the default unlabelled `•` notation, this creates
+
+```text
+trees/minimiser_14.tree
+trees/maximiser_14.tree
+```
+
+If `--label-leaves` is used, the program instead saves standard Newick files:
 
 ```text
 trees/minimiser_14.newick
@@ -136,51 +191,64 @@ trees/maximiser_14.newick
 
 ## Example
 
-For `n = 14`,
-
-```text
-14 = 2 * 7.
-```
-
-Hence the maximiser consists of two copies of the optimal 7-leaf tree.
-
-The optimal 7-leaf tree has the recursive form
-
-```text
-T*_7 = (F_2, (F_1, leaf)).
-```
-
-Therefore,
-
-```text
-T_max(14) = (T*_7, T*_7).
-```
-
 Running
 
 ```bash
 python extremal_symmetry_trees.py 14 --q 3
 ```
 
-produces output of the form
+produces
 
 ```text
 n = 14
+output = unlabelled tree-shape notation (• = leaf)
 
 MINIMISER
 valid for every positive non-increasing f
-(L1,(L2,(L3,(L4,(L5,(L6,(L7,(L8,(L9,(L10,(L11,(L12,(L13,L14)))))))))))));
+(((((((((((((•,•),•),•),•),•),•),•),•),•),•),•),•),•);
 
 MAXIMISER
 valid for f_q(d)=q^(-d), q>2
-((((L1,L2),(L3,L4)),((L5,L6),L7)),(((L8,L9),(L10,L11)),((L12,L13),L14)));
+((((•,•),(•,•)),((•,•),•)),(((•,•),(•,•)),((•,•),•)));
 
 q = 3
 I_q(min) = 1.88167642316e-06
 I_q(max) = 1.44444444444
 ```
 
-The leaf labels `L1`, `L2`, ..., `Ln` are introduced only to produce a valid and readable Newick representation. The mathematical objects studied in the paper are **unlabelled, unordered tree shapes**.
+For `n = 14`,
+
+```text
+14 = 2 * 7,
+```
+
+so the maximiser consists of two copies of the unique optimal 7-leaf tree.
+
+In the notation of the paper,
+
+```text
+T*_7 = (F_2, (F_1, •)),
+```
+
+and therefore
+
+```text
+T_max(14) = (T*_7, T*_7).
+```
+
+---
+
+## Features
+
+- Direct construction from the theoretical extremal characterisation.
+- Default output for **unlabelled tree shapes** using `•` for leaves.
+- Canonical child ordering for unordered trees.
+- Optional labelled Newick output for compatibility with external software.
+- Optional evaluation of `I_q` for any prescribed `q > 2`.
+- Optional saving of the generated trees to files.
+- No third-party dependencies.
+- Integer arithmetic for the preferred power `p(n)`, avoiding floating-point ambiguity.
+- Internal checks on the number of leaves.
 
 ---
 
@@ -194,26 +262,24 @@ A minimal repository can be organised as
 └── extremal_symmetry_trees.py
 ```
 
-If desired, generated Newick files can be kept in a separate directory:
+Generated tree files may optionally be stored in a separate directory:
 
 ```text
 .
 ├── README.md
 ├── extremal_symmetry_trees.py
 └── trees/
-    ├── minimiser_14.newick
-    └── maximiser_14.newick
+    ├── minimiser_14.tree
+    └── maximiser_14.tree
 ```
 
 ---
 
 ## Main functions
 
-The script contains the following main routines.
-
 ### `caterpillar(n)`
 
-Constructs the caterpillar `C_n`, the unique minimiser for positive non-increasing depth weights.
+Constructs the caterpillar `C_n`, the unique minimiser for every positive non-increasing depth weight.
 
 ### `fully_balanced(height)`
 
@@ -229,7 +295,7 @@ For odd `n >= 3`, computes the unique power of two `p(n)` satisfying
 
 ### `maximiser_exponential(n)`
 
-Constructs the unique maximising tree for
+Constructs the unique maximising tree shape for
 
 ```text
 f_q(d) = q^(-d),   q > 2.
@@ -243,54 +309,42 @@ Computes
 I_q(T) = sum_{v in Sym(T)} q^(-depth_T(v)).
 ```
 
-for a given tree.
+### `to_bullet_notation(tree)`
 
-### `to_newick(tree)`
+Returns the canonical parenthetic representation of the unlabelled tree shape using `•` for each leaf.
 
-Converts the internal tree representation into Newick format.
+### `to_labelled_newick(tree)`
+
+Returns a standard Newick representation with leaves labelled `L1`, ..., `Ln`.
 
 ---
 
 ## Scope and limitations
 
-The closed-form maximum implemented here is proved for
+The closed-form maximiser implemented in this repository is proved for
 
 ```text
 f_q(d) = q^(-d),   q > 2.
 ```
 
-The script deliberately rejects `q <= 2` when `--q` is supplied because the structural characterisation of the maximiser used here is not asserted for that range.
+The program rejects `q <= 2` when the `--q` option is supplied because the structural characterisation used here is not asserted for that range.
 
-For a general positive weight function `f`, the minimiser is implemented whenever `f` is non-increasing, but the present script does **not** attempt to determine the maximiser.
+For a general positive weight function `f`, the program implements the minimising shape whenever `f` is non-increasing, but it does **not** attempt to determine the maximiser.
 
-A natural extension of the code is a brute-force enumerator for small `n`, which would allow arbitrary depth weights `f` to be explored computationally.
-
----
-
-## Newick convention
-
-The Newick strings encode rooted binary tree shapes using arbitrary leaf labels.
-
-For example,
-
-```text
-(L1,(L2,L3));
-```
-
-represents a 3-leaf caterpillar.
-
-Because the underlying trees are unordered, exchanging the left and right child of any internal node represents the same mathematical tree shape.
+The default `•` representation is intended as mathematical tree-shape notation. Use `--label-leaves` when strict compatibility with Newick-based phylogenetic software is required.
 
 ---
 
-## Citation
+## Accompanying manuscript
 
-If you use this code in academic work, please cite the accompanying manuscript:
+This code accompanies the manuscript:
 
-> Arnau Mir-Fuentes and Arnau Mir,  
-> *Extremal Depth-Weighted Symmetry in Rooted Binary Trees*.
+> **Arnau Mir-Fuentes and Arnau Mir**  
+> *Extremal Depth-Weighted Symmetry in Rooted Binary Trees*
 
-A complete bibliographic entry can be added here once the article is published.
+The paper introduces the symmetry profile of a rooted binary tree and studies the associated family of depth-weighted symmetry indices. The code in this repository implements the explicit extremal constructions obtained in the paper.
+
+The final bibliographic reference and DOI will be added once the article is published.
 
 ---
 
