@@ -8,9 +8,9 @@ The program takes a prescribed number of leaves \(n\) and returns, in **Newick f
 
 - the unique **minimising tree** for every positive non-increasing depth weight \(f\);
 - the unique **maximising tree** for reciprocal exponential weights
-  \[
+$$
   f_q(d)=q^{-d}, \qquad q>2.
-  \]
+$$
 
 For the reciprocal exponential family, the maximising **shape is independent of \(q\)** throughout the range \(q>2\).
 
