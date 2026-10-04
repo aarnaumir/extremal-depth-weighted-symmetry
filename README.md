@@ -4,85 +4,77 @@ Python code for constructing extremal rooted binary tree shapes for the depth-we
 
 **Extremal Depth-Weighted Symmetry in Rooted Binary Trees**
 
-The program takes a prescribed number of leaves $n$ and returns, in **Newick format**:
+The program takes a prescribed number of leaves `n` and returns, in **Newick format**:
 
-- the unique **minimising tree** for every positive non-increasing depth weight $f$;
+- the unique **minimising tree** for every positive non-increasing depth weight `f`;
 - the unique **maximising tree** for reciprocal exponential weights
-  $$
-  f_q(d)=q^{-d}, \qquad q>2.
-  $$
 
-For the reciprocal exponential family, the maximising **shape is independent of $q$** throughout the range $q>2$.
+```text
+f_q(d) = q^(-d),   q > 2.
+```
+
+For the reciprocal exponential family, the maximising **shape is independent of q** throughout the range `q > 2`.
 
 ---
 
 ## Mathematical background
 
-Let $T$ be a finite rooted unordered binary tree. An internal vertex $v$ is called **symmetric** when its two child subtrees are isomorphic as rooted trees.
+Let `T` be a finite rooted unordered binary tree. An internal vertex `v` is called **symmetric** when its two child subtrees are isomorphic as rooted trees.
 
 Given a positive depth weight
-$$
-f:\mathbb N_0\to(0,\infty),
-$$
+
+```text
+f : N_0 -> (0, infinity),
+```
+
 the depth-weighted symmetry index is
 
-$$
-I_f(T)
-=
-\sum_{v\in\mathrm{Sym}(T)}
-f\bigl(\mathrm{depth}_T(v)\bigr).
-$$
+```text
+I_f(T) = sum_{v in Sym(T)} f(depth_T(v)).
+```
 
 The script implements the extremal results proved in the accompanying work.
 
 ### Minimum
 
-For every positive non-increasing depth weight $f$, the unique minimiser among rooted binary trees with $n$ leaves is the **caterpillar** $C_n$.
+For every positive non-increasing depth weight `f`, the unique minimiser among rooted binary trees with `n` leaves is the **caterpillar** `C_n`.
 
 ### Maximum for reciprocal exponential weights
 
 For
-$$
-f_q(d)=q^{-d}, \qquad q>2,
-$$
+
+```text
+f_q(d) = q^(-d),   q > 2,
+```
+
 the unique maximiser is constructed recursively.
 
-If $n=1$, the maximiser is a single leaf.
+If `n = 1`, the maximiser is a single leaf.
 
-If $n$ is even,
-$$
-T_n^{\max}
-=
-\bigl(T_{n/2}^{\max},T_{n/2}^{\max}\bigr).
-$$
+If `n` is even,
 
-If $n\ge3$ is odd,
-$$
-T_n^{\max}
-=
-\bigl(F_{k(n)},T_{n-p(n)}^{\max}\bigr),
-$$
-where $F_k$ denotes the fully balanced tree of height $k$, and
+```text
+T_max(n) = (T_max(n/2), T_max(n/2)).
+```
 
-$$
-k(n)
-=
-\left\lfloor
-\log_2\left(\frac{2(n+1)}{3}\right)
-\right\rfloor,
-\qquad
-p(n)=2^{k(n)}.
-$$
+If `n >= 3` is odd,
 
-Equivalently, $p(n)$ is the unique power of two satisfying
+```text
+T_max(n) = (F_k(n), T_max(n - p(n))),
+```
 
-$$
-\frac{n+1}{3}
-<
-p(n)
-\le
-\frac{2(n+1)}{3}.
-$$
+where `F_k` denotes the fully balanced tree of height `k`, and
+
+```text
+k(n) = floor(log2(2(n+1)/3)),
+p(n) = 2^k(n).
+```
+
+Equivalently, `p(n)` is the unique power of two satisfying
+
+```text
+(n+1)/3 < p(n) <= 2(n+1)/3.
+```
 
 ---
 
@@ -91,9 +83,9 @@ $$
 - Constructs the extremal tree shapes directly from the theoretical characterisation.
 - Outputs both trees in standard Newick format.
 - Uses only the Python standard library.
-- Optionally evaluates $I_q$ for a chosen $q>2$.
+- Optionally evaluates `I_q` for a chosen `q > 2`.
 - Optionally saves the minimiser and maximiser as `.newick` files.
-- Uses integer arithmetic to determine the preferred power $p(n)$, avoiding floating-point ambiguity.
+- Uses integer arithmetic to determine the preferred power `p(n)`, avoiding floating-point ambiguity.
 - Includes internal checks for the number of leaves.
 
 ---
@@ -121,7 +113,7 @@ For example:
 python extremal_symmetry_trees.py 14
 ```
 
-To also evaluate the reciprocal exponential index for a particular $q>2$:
+To also evaluate the reciprocal exponential index for a particular `q > 2`:
 
 ```bash
 python extremal_symmetry_trees.py 14 --q 3
@@ -144,25 +136,25 @@ trees/maximiser_14.newick
 
 ## Example
 
-For $n=14$,
+For `n = 14`,
 
-$$
-14=2\cdot7.
-$$
+```text
+14 = 2 * 7.
+```
 
-Hence the maximiser consists of two copies of the optimal 7-leaf tree. Since
+Hence the maximiser consists of two copies of the optimal 7-leaf tree.
 
-$$
-T_7^\star=(F_2,(F_1,\bullet)),
-$$
+The optimal 7-leaf tree has the recursive form
 
-the maximiser is
+```text
+T*_7 = (F_2, (F_1, leaf)).
+```
 
-$$
-T_{14}^{\max}
-=
-\bigl(T_7^\star,T_7^\star\bigr).
-$$
+Therefore,
+
+```text
+T_max(14) = (T*_7, T*_7).
+```
 
 Running
 
@@ -221,37 +213,35 @@ The script contains the following main routines.
 
 ### `caterpillar(n)`
 
-Constructs the caterpillar $C_n$, the unique minimiser for positive non-increasing depth weights.
+Constructs the caterpillar `C_n`, the unique minimiser for positive non-increasing depth weights.
 
 ### `fully_balanced(height)`
 
-Constructs the fully balanced tree $F_h$ with $2^h$ leaves.
+Constructs the fully balanced tree `F_h` with `2^h` leaves.
 
 ### `preferred_power(n)`
 
-For odd $n\ge3$, computes the unique power of two $p(n)$ satisfying
+For odd `n >= 3`, computes the unique power of two `p(n)` satisfying
 
-$$
-\frac{n+1}{3}<p(n)\le\frac{2(n+1)}3.
-$$
+```text
+(n+1)/3 < p(n) <= 2(n+1)/3.
+```
 
 ### `maximiser_exponential(n)`
 
 Constructs the unique maximising tree for
 
-$$
-f_q(d)=q^{-d},\qquad q>2.
-$$
+```text
+f_q(d) = q^(-d),   q > 2.
+```
 
 ### `iq_value(tree, q)`
 
 Computes
 
-$$
-I_q(T)
-=
-\sum_{v\in\mathrm{Sym}(T)}q^{-\mathrm{depth}_T(v)}
-$$
+```text
+I_q(T) = sum_{v in Sym(T)} q^(-depth_T(v)).
+```
 
 for a given tree.
 
@@ -265,16 +255,15 @@ Converts the internal tree representation into Newick format.
 
 The closed-form maximum implemented here is proved for
 
-$$
-f_q(d)=q^{-d},
-\qquad q>2.
-$$
+```text
+f_q(d) = q^(-d),   q > 2.
+```
 
 The script deliberately rejects `q <= 2` when `--q` is supplied because the structural characterisation of the maximiser used here is not asserted for that range.
 
-For a general positive weight function $f$, the minimiser is implemented whenever $f$ is non-increasing, but the present script does **not** attempt to determine the maximiser.
+For a general positive weight function `f`, the minimiser is implemented whenever `f` is non-increasing, but the present script does **not** attempt to determine the maximiser.
 
-A natural extension of the code is a brute-force enumerator for small $n$, which would allow arbitrary depth weights $f$ to be explored computationally.
+A natural extension of the code is a brute-force enumerator for small `n`, which would allow arbitrary depth weights `f` to be explored computationally.
 
 ---
 
